@@ -372,7 +372,7 @@ const UI = {
 
 /* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) ---------- */
 const touch = { x: 0, y: 0, e: false, f: false };
-let uiScale = 1;
+let uiScaleX = 1, uiScaleY = 1;
 function bindTouch() {
   const wrap = $('game-wrap');
   const isTouch = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
@@ -385,8 +385,8 @@ function bindTouch() {
   const move = ev => {
     const r = base.getBoundingClientRect();
     // getBoundingClientRect() is already scaled; convert pointer coordinates back to game-design pixels.
-    const dx0 = (ev.clientX - (r.left + r.width / 2)) / uiScale;
-    const dy0 = (ev.clientY - (r.top + r.height / 2)) / uiScale;
+    const dx0 = (ev.clientX - (r.left + r.width / 2)) / uiScaleX;
+    const dy0 = (ev.clientY - (r.top + r.height / 2)) / uiScaleY;
     let dx = dx0, dy = dy0;
     const len = Math.hypot(dx, dy);
     if (len > R) { dx *= R / len; dy *= R / len; }
@@ -607,12 +607,15 @@ new Phaser.Game({
 });
 function fit() {
   const viewport = window.visualViewport;
-  const vw = viewport ? viewport.width : window.innerWidth;
-  const vh = viewport ? viewport.height : window.innerHeight;
+  const vw = Math.max(1, viewport ? viewport.width : window.innerWidth);
+  const vh = Math.max(1, viewport ? viewport.height : window.innerHeight);
   const wrap = $('game-wrap');
-  // Fit the 16:9 game stage to the largest size that stays fully visible on any screen.
-  uiScale = Math.max(0.1, Math.min(vw / 960, vh / 540));
-  wrap.style.transform = `scale(${uiScale})`;
+
+  // Fill the entire available viewport (no letterbox margins).
+  // Phaser's internal world remains 800x540; only the presentation layer scales.
+  uiScaleX = vw / 960;
+  uiScaleY = vh / 540;
+  wrap.style.transform = `scale(${uiScaleX}, ${uiScaleY})`;
 }
 window.addEventListener('resize', fit, { passive: true });
 window.addEventListener('orientationchange', () => setTimeout(fit, 120), { passive: true });
