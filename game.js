@@ -19,9 +19,11 @@ const DATA_NOTE = 'ค่าโภชนาการและเกณฑ์เ�
   'และไม่ใช่คำแนะนำทางการแพทย์ ความต้องการจริงของเด็กโรคไตแต่ละคนต่างกันตามอายุ ระยะของโรค น้ำหนัก และผลเลือด ' +
   'ต้องให้แพทย์หรือนักกำหนดอาหารเป็นผู้กำหนด';
 
+// n = ค่าต่อ 100 กรัม (ปริมาณอ้างอิงเดียวกันทุกรายการ) · portion = ปริมาณที่เด็กกินจริงในเกม (กรัม)
+// หากต้องการเปลี่ยนเป็นรูปภาพ ให้ใส่ path ที่ field "sprite" เช่น 'assets/rice.png'
 const REF = { amount: 100, unit: 'g', label: '100 กรัม' };
 const FOOD_DB = {
-  rice:     { id: 'rice',     name: 'ข้าวสวย',   emoji: '🍚', sprite: null, ref: REF, verified: false, portion: { grams: 100,  label: '1 ถ้วยเล็ก' },
+  rice:     { id: 'rice',     name: 'ข้าวสวย',   emoji: '🍚', sprite: null, ref: REF, verified: false, portion: { grams: 100, label: '1 ถ้วยเล็ก' },
               n: { energy: 130, protein: 2.7,  carb: 28,   fat: 0.3,  sodium: 1,    potassium: 35,  phosphorus: 43 } },
   egg:      { id: 'egg',      name: 'ไข่ต้ม',    emoji: '🥚', sprite: null, ref: REF, verified: false, portion: { grams: 50,  label: '1 ฟอง' },
               n: { energy: 155, protein: 12.6, carb: 1.1,  fat: 10.6, sodium: 124,  potassium: 126, phosphorus: 172 } },
@@ -39,6 +41,10 @@ const FOOD_DB = {
               n: { energy: 15,  protein: 0.7,  carb: 3.6,  fat: 0.1,  sodium: 2,    potassium: 147, phosphorus: 24 } },
 };
 
+// เกณฑ์ตัวอย่างสำหรับเตือนในเกม (ปรับได้ที่นี่) – ไม่ใช่ค่าที่แพทย์กำหนด
+// เกณฑ์ต่อมื้อ = เกณฑ์ต่อวัน × สัดส่วนของมื้อ
+//   type 'max'   = ห้ามเกินค่าสูงสุด  (เขียว ≤ warnAt, เหลือง warnAt–100%, แดง > 100%)
+//   type 'range' = ต้องอยู่ในช่วง min–max (ต่ำไป = เหลือง, สูงไป = แดง) โดย min/max = เป้าต่อมื้อ × lo/hi
 const PROFILE = {
   label: 'เด็กตัวอย่าง (เกณฑ์สำหรับทดสอบเกม)',
   mealShare: 0.25,
@@ -52,23 +58,26 @@ const PROFILE = {
   },
 };
 
+// เพิ่มด่านใหม่ได้โดยเพิ่ม object ในอาร์เรย์นี้ (lunch, dinner ...) พร้อม mealShare/เกณฑ์ของด่านนั้น
 const LEVELS = [
   {
     id: 'breakfast',
     title: 'ด่านที่ 1: อาหารเช้า',
-    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วกด E หรือคลิกที่กระเป๋าเพื่อจัดอาหารเช้าให้ครบ 3 อย่าง',
+    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วไปจัดอาหารเช้าที่จานสีเขียว เลือกให้ครบ 3 อย่าง',
     pickCount: 3,
     ingredients: ['rice', 'egg', 'banana', 'apple', 'bread', 'milk', 'sausage', 'cucumber'],
     counterSlots: [70, 165, 260, 355, 450, 545, 640, 735].map(x => ({ x, y: 138 })),
+    plate: { x: 620, y: 410, tableR: 62 },   // โต๊ะกลมที่มีจานสีเขียว (เดินทะลุไม่ได้)
     start: { x: 400, y: 330 },
   },
 ];
 
-const CFG = { W: 800, H: 540, speed: 210, pickRange: 85, minX: 30, maxX: 770, minY: 208, maxY: 515, playerR: 18 };
+const CFG = { W: 800, H: 540, speed: 210, pickRange: 85, plateRange: 105, minX: 30, maxX: 770, minY: 208, maxY: 515, playerR: 18 };
 
 /* ---------- 2) ตรรกะคำนวณ + แจ้งเตือน ---------- */
 const fmt = v => (Math.round(v * 10) / 10).toLocaleString('en-US');
 
+// ค่าสารอาหารของ "ปริมาณที่กินจริง" = ค่าต่อ 100 g × กรัมที่กิน ÷ 100
 function portionAmount(id, key) {
   const f = FOOD_DB[id];
   if (f.ref.amount !== 100 || f.ref.unit !== 'g') throw new Error('ปริมาณอ้างอิงไม่สอดคล้องกัน ไม่สามารถคำนวณได้');
@@ -83,6 +92,8 @@ function ruleBounds(key) {
                           : { type: 'range', daily: r.daily, meal, min: meal * r.lo, max: meal * r.hi };
 }
 
+// ประเมินอาหารที่จัดในจาน → ตารางผลรวม + รายการแจ้งเตือน + ระดับภาพรวม (good | warn | bad)
+// opt.partial = true ระหว่างยังจัดไม่ครบ (ยังไม่เตือนเรื่อง "ต่ำไป")
 function evaluateMeal(ids, opt = {}) {
   const rows = NUTRIENTS.map(nu => {
     const parts = ids.map(id => ({ id, v: portionAmount(id, nu.key) }));
@@ -131,6 +142,7 @@ function evaluateMeal(ids, opt = {}) {
       if (cand && portionAmount(cand, r.key) < top.v)
         a.tip += ` · ลองสลับเป็น ${dish(cand)} (${fmt(portionAmount(cand, r.key))} ${u})${state.collected.includes(cand) ? '' : ' ต้องกลับไปเก็บก่อน'}`;
     } else {
+      // แนะนำเฉพาะตัวที่ตัวมันเองไม่ดันค่าโซเดียม/โพแทสเซียม/ฟอสฟอรัสให้ใกล้เกณฑ์
       const safe = id => Object.keys(PROFILE.rules).every(k => {
         const bb = ruleBounds(k); return bb.type !== 'max' || portionAmount(id, k) <= bb.max * PROFILE.warnAt;
       });
@@ -181,25 +193,20 @@ const UI = {
       const b = document.createElement('button');
       const id = state.collected[i];
       b.className = 'bag-slot';
-      b.style.display = 'flex';
-      b.style.alignItems = 'center';
-      b.style.justifyContent = 'center';
-      b.style.fontSize = '24px';
-      
       if (id) {
         const f = FOOD_DB[id];
         b.classList.add('filled'); if (state.plated.includes(id)) b.classList.add('plated');
-        b.textContent = f.emoji; b.title = `${f.name} – คลิกเพื่อรวมเข้าจานหรือดูข้อมูล`;
-        b.onclick = () => UI.openPlate();
+        b.textContent = f.emoji; b.title = `${f.name} – คลิกเพื่อดูข้อมูลโภชนาการ`;
+        b.onclick = () => UI.openInfo(id);
       } else { b.disabled = true; b.tabIndex = -1; }
       $('bag-slots').appendChild(b);
     }
   },
 
+  /* ----- ข้อมูลวัตถุดิบ: ต่อ 100 g / ต่อปริมาณที่กิน / % ของเกณฑ์มื้อเช้า ----- */
   openInfo(id) {
     const f = FOOD_DB[id];
     $('im-emoji').textContent = f.emoji;
-    $('im-emoji').style.fontSize = '48px';
     $('im-name').textContent = f.name;
     $('im-ref').textContent = `ปริมาณที่กินในเกม: ${f.portion.label} = ${f.portion.grams} กรัม`;
     const rows = NUTRIENTS.map(nu => {
@@ -221,6 +228,7 @@ const UI = {
   },
   closeInfo() { $('info-modal').classList.add('hidden'); state.infoOpen = false; },
 
+  /* ----- หน้าต่างจัดอาหาร ----- */
   openPlate() { state.mode = 'plate'; $('plate-modal').classList.remove('hidden'); UI.renderPlate(); },
   closePlate() { $('plate-modal').classList.add('hidden'); state.mode = 'play'; UI.renderHud(); },
 
@@ -234,7 +242,7 @@ const UI = {
       const f = FOOD_DB[id], used = state.plated.includes(id), full = state.plated.length >= need;
       const d = document.createElement('div');
       d.className = 'pcard' + (used ? ' used' : '');
-      d.innerHTML = `<span class="e" style="font-size: 28px; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;">${f.emoji}</span><span class="n">${f.name}<small>${f.portion.label} · ${f.portion.grams} g</small></span><span class="b"></span>`;
+      d.innerHTML = `<span class="e">${f.emoji}</span><span class="n">${f.name}<small>${f.portion.label} · ${f.portion.grams} g</small></span><span class="b"></span>`;
       const info = document.createElement('button');
       info.className = 'btn small'; info.textContent = 'ข้อมูล'; info.onclick = () => UI.openInfo(id);
       const add = document.createElement('button');
@@ -249,7 +257,7 @@ const UI = {
       s.className = 'slot' + (id ? ' filled' : '');
       if (id) {
         const f = FOOD_DB[id];
-        s.innerHTML = `<span class="e" style="font-size: 26px; display: inline-flex; align-items: center; justify-content: center;">${f.emoji}</span><span class="n">${f.name}</span>`;
+        s.innerHTML = `<span class="e">${f.emoji}</span><span class="n">${f.name}</span>`;
         const rm = document.createElement('button');
         rm.className = 'btn small'; rm.textContent = 'นำออก'; rm.onclick = () => UI.removeFromPlate(id);
         s.appendChild(rm);
@@ -260,6 +268,7 @@ const UI = {
     const ok = state.plated.length === need;
     $('pm-confirm').disabled = !ok;
 
+    // มาตรวัดสัญญาณไฟจราจรแบบสด: เห็นผลทันทีที่ใส่/นำออก
     const ev = evaluateMeal(state.plated, { partial: !ok });
     $('pm-meters').innerHTML = ev.rows.filter(r => r.bounds).map(r => {
       const scale = r.bounds.max * 1.25, w = Math.min(100, r.total / scale * 100);
@@ -280,9 +289,9 @@ const UI = {
   },
 
   addToPlate(id) {
-    if (!state.collected.includes(id)) return;
-    if (state.plated.includes(id)) return;
-    if (state.plated.length >= state.level.pickCount) return;
+    if (!state.collected.includes(id)) return;                       // ต้องเก็บมาแล้วเท่านั้น
+    if (state.plated.includes(id)) return;                           // ห้ามซ้ำ
+    if (state.plated.length >= state.level.pickCount) return;        // เกิน 3 ไม่ได้
     const before = new Set(evaluateMeal(state.plated, { partial: true }).alerts.filter(a => a.level === 'red').map(a => a.key));
     state.plated.push(id);
     const now = evaluateMeal(state.plated, { partial: true }).alerts.filter(a => a.level === 'red' && !before.has(a.key));
@@ -291,8 +300,9 @@ const UI = {
   },
   removeFromPlate(id) { state.plated = state.plated.filter(x => x !== id); UI.renderPlate(); },
 
+  /* ----- ยืนยัน: ถ้า "ยังไม่เหมาะ" ให้เด้งเตือนถามก่อน ----- */
   confirmPlate() {
-    if (state.plated.length !== state.level.pickCount) return;
+    if (state.plated.length !== state.level.pickCount) return;       // กันยืนยันก่อนครบ
     const ev = evaluateMeal(state.plated);
     if (ev.level === 'bad') return UI.openWarn(ev);
     UI.showSummary();
@@ -311,14 +321,15 @@ const UI = {
     state.mode = 'summary';
     $('sm-items').innerHTML = state.plated.map(id => {
       const f = FOOD_DB[id];
-      return `<div class="sitem"><span class="e" style="font-size: 26px; display: inline-flex; align-items: center; justify-content: center;">${f.emoji}</span><span class="n">${f.name}<small>${f.portion.label} (${f.portion.grams} g)</small></span></div>`;
+      return `<div class="sitem"><span class="e">${f.emoji}</span><span class="n">${f.name}<small>${f.portion.label} (${f.portion.grams} g)</small></span></div>`;
     }).join('');
     $('sm-verdict').className = 'verdict ' + v.cls;
     $('sm-verdict').textContent = `${v.icon} ${v.text}`;
     $('sm-alerts').innerHTML = ev.alerts.length
       ? ev.alerts.map(a => `<div class="alert ${a.level === 'red' ? 'r' : 'y'}"><b>${STATUS_ICON[a.level]} ${a.title}</b><span>${a.detail}</span>${a.tip ? `<small>${a.tip}</small>` : ''}</div>`).join('')
       : '<div class="alert g"><b>✅ ทุกค่าอยู่ในเกณฑ์ตัวอย่าง</b></div>';
-    const head = `<tr class="th"><th>สารอาหาร</th>${state.plated.map(id => `<th><span style="font-size: 22px;">${FOOD_DB[id].emoji}</span></th>`).join('')}<th>รวม</th><th>เกณฑ์/มื้อ</th><th>ผล</th></tr>`;
+    // ตารางคำนวณ: ค่าของแต่ละอย่าง → รวม → เกณฑ์ → % และสถานะ
+    const head = `<tr class="th"><th>สารอาหาร</th>${state.plated.map(id => `<th>${FOOD_DB[id].emoji}</th>`).join('')}<th>รวม</th><th>เกณฑ์/มื้อ</th><th>ผล</th></tr>`;
     const body = ev.rows.map(r => {
       const res = r.bounds
         ? `${STATUS_ICON[r.status]} ${r.kind === 'low' ? 'ต่ำ' : Math.round(r.pct * 100) + '%'}`
@@ -340,7 +351,7 @@ const UI = {
   escape() {
     if (state.warnOpen) return UI.closeWarn();
     if (state.infoOpen) return UI.closeInfo();
-    if (state.mode === 'plate') return UI.closePlate();
+    if (state.mode === 'plate') return UI.closePlate();             // summary ปิดด้วย Esc ไม่ได้
   },
 
   restart() {
@@ -357,16 +368,6 @@ const UI = {
     $('sm-restart').onclick = UI.restart;
     $('wm-back').onclick = UI.closeWarn;
     $('wm-go').onclick = UI.showSummary;
-    
-    const bagWrap = document.querySelector('.bag-wrap');
-    if (bagWrap) {
-      bagWrap.style.cursor = 'pointer';
-      bagWrap.onclick = () => {
-        if (state.mode === 'play') {
-          UI.openPlate();
-        }
-      };
-    }
   },
 };
 
@@ -409,6 +410,7 @@ class KitchenScene extends Phaser.Scene {
     this.level = state.level;
     this.drawRoom();
     this.items = this.level.ingredients.map((id, i) => this.makeItem(id, this.level.counterSlots[i]));
+    this.makePlate();
     this.makePlayer();
     this.prompt = this.add.text(0, 0, '', {
       fontFamily: 'Sarabun, Tahoma, sans-serif', fontSize: '17px', fontStyle: 'bold', color: '#1f2d4a',
@@ -429,6 +431,16 @@ class KitchenScene extends Phaser.Scene {
     g.fillStyle(0xe0a35f).fillRect(0, 96, CFG.W, 80);                             // เคาน์เตอร์ (พื้นผิวด้านบน)
     g.fillStyle(0xc98a4b).fillRect(0, 176, CFG.W, 12);                            // ขอบเคาน์เตอร์
     g.lineStyle(3, 0x1f2d4a).strokeRect(0, 96, CFG.W, 92);
+    const p = this.level.plate;                                                    // โต๊ะกลม + จานสีเขียว
+    g.fillStyle(0x000000, 0.15).fillCircle(p.x + 5, p.y + 7, p.tableR);
+    g.fillStyle(0xc98a4b).fillCircle(p.x, p.y, p.tableR).fillStyle(0xe0a35f).fillCircle(p.x, p.y, p.tableR - 8);
+    g.lineStyle(3, 0x1f2d4a).strokeCircle(p.x, p.y, p.tableR);
+    g.fillStyle(0x3fbf7f).fillCircle(p.x, p.y, 34).lineStyle(4, 0x1f8f5a).strokeCircle(p.x, p.y, 34);
+    g.fillStyle(0x8be0b3).fillCircle(p.x, p.y, 21);
+    this.add.text(p.x, p.y - p.tableR - 4, 'จานอาหาร', {
+      fontFamily: 'Sarabun, Tahoma, sans-serif', fontSize: '15px', fontStyle: 'bold',
+      color: '#fff', stroke: '#1f8f5a', strokeThickness: 4,
+    }).setOrigin(0.5, 1).setDepth(3);
   }
 
   makeItem(id, pos) {
@@ -444,6 +456,8 @@ class KitchenScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(3);
     return { id, x: pos.x, y: pos.y, visual, shadow, label, collected: false, baseY: pos.y };
   }
+
+  makePlate() { /* วาดไว้ใน drawRoom แล้ว ตำแหน่งตรวจระยะอยู่ที่ level.plate */ }
 
   makePlayer() {
     const c = this.add.container(this.level.start.x, this.level.start.y).setDepth(10);
@@ -478,7 +492,10 @@ class KitchenScene extends Phaser.Scene {
       const d = Phaser.Math.Distance.Between(p.x, p.y, it.x, it.y);
       if (d <= CFG.pickRange && d < bd) { best = { type: 'item', item: it }; bd = d; }
     });
-    return best;
+    if (best) return best;
+    const pl = this.level.plate;
+    if (Phaser.Math.Distance.Between(p.x, p.y, pl.x, pl.y) <= CFG.plateRange) return { type: 'plate' };
+    return null;
   }
 
   collect(it) {
@@ -492,7 +509,7 @@ class KitchenScene extends Phaser.Scene {
 
   update(time, dt) {
     const K = this.keys, JD = Phaser.Input.Keyboard.JustDown;
-    const pressE = JD(K.e) || touch.e, pressF = JD(K.f) || touch.f, pressEsc = JD(K.esc);
+    const pressE = JD(K.e) || touch.e, pressF = JD(K.f) || touch.f, pressEsc = JD(K.esc);   // เคลียร์ทุกเฟรม
     touch.e = touch.f = false;
     if (pressEsc) UI.escape();
 
@@ -512,6 +529,9 @@ class KitchenScene extends Phaser.Scene {
     if (len > 0.05) {
       let nx = Phaser.Math.Clamp(p.x + vx * CFG.speed * dt / 1000, CFG.minX, CFG.maxX);
       let ny = Phaser.Math.Clamp(p.y + vy * CFG.speed * dt / 1000, CFG.minY, CFG.maxY);
+      const t = this.level.plate, minD = t.tableR + CFG.playerR;                 // ชนโต๊ะ: เดินทะลุไม่ได้ แต่เลื้อยไปตามขอบ
+      const dx = nx - t.x, dy = ny - t.y, d = Math.hypot(dx, dy);
+      if (d < minD && d > 0) { nx = t.x + dx / d * minD; ny = t.y + dy / d * minD; }
       p.setPosition(nx, ny);
       this.dirAngle = Phaser.Math.Angle.RotateTo(this.dirAngle, Math.atan2(vy, vx), 0.25);
       p.rotation = this.dirAngle;
@@ -521,30 +541,15 @@ class KitchenScene extends Phaser.Scene {
 
     const near = locked ? null : this.nearest();
     this.items.forEach(it => { if (!it.collected) it.visual.setScale(near && near.item === it ? 1.25 : 1); });
-    
-    // ตรวจสอบสถานะว่ามีการเก็บวัตถุดิบไว้ในกระเป๋าแล้วหรือยัง
     if (near) {
-      const txt = `กด E เก็บ${FOOD_DB[near.item.id].name} · F ดูข้อมูล`;
+      const txt = near.type === 'plate' ? 'กด E เพื่อจัดอาหาร'
+        : `กด E เก็บ${FOOD_DB[near.item.id].name} · F ดูข้อมูล`;
       this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
-    } else if (state.collected.length > 0) {
-      // แสดงคำแนะนำกด E เมื่อมีวัตถุดิบในกระเป๋าอย่างน้อย 1 ชิ้นขึ้นไปเท่านั้น
-      const txt = `กด E เพื่อจัดอาหารในช่องเก็บของ`;
-      this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
-    } else {
-      // ซ่อนคำแนะนำเมื่อเริ่มต้นเกม (ยังไม่มีวัตถุดิบในกระเป๋า)
-      this.prompt.setVisible(false);
-    }
+    } else this.prompt.setVisible(false);
 
-    if (!locked) {
-      if (pressE) {
-        if (near) {
-          this.collect(near.item);
-        } else if (state.collected.length > 0) {
-          UI.openPlate();
-        }
-      } else if (pressF && near) {
-        UI.openInfo(near.item.id);
-      }
+    if (!locked && near) {
+      if (pressE) near.type === 'plate' ? UI.openPlate() : this.collect(near.item);
+      else if (pressF && near.type === 'item') UI.openInfo(near.item.id);
     }
   }
 }
