@@ -13,6 +13,7 @@
   <div id="stage">
     <div id="game-wrap">
       <div id="game"></div>
+      <button id="fullscreen-btn" class="screen-btn" type="button" aria-label="ขยายเต็มหน้าจอ" title="เต็มหน้าจอ">⛶</button>
 
       <!-- แถบภารกิจด้านบน -->
       <div id="hud-top">
@@ -29,9 +30,9 @@
 
       <!-- ปุ่มควบคุมบนมือถือ -->
       <div id="touch">
-        <div id="joy"><div id="joy-knob"></div></div>
-        <button id="btn-f" class="tbtn" aria-label="ดูข้อมูล">F<small>ข้อมูล</small></button>
-        <button id="btn-e" class="tbtn main" aria-label="เก็บ หรือ จัดอาหาร">E<small>เก็บ</small></button>
+        <div id="joy" role="group" aria-label="จอยสติ๊กควบคุมตัวละคร"><span class="joy-hint">เดิน</span><div id="joy-knob"></div></div>
+        <button id="btn-f" class="tbtn" type="button" aria-label="ดูข้อมูล">F<small>ข้อมูล</small></button>
+        <button id="btn-e" class="tbtn main" type="button" aria-label="เก็บ หรือ จัดอาหาร">E<small>เก็บ</small></button>
       </div>
 
       <div id="toast" class="hidden"></div>
