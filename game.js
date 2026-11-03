@@ -56,7 +56,7 @@ const LEVELS = [
   {
     id: 'breakfast',
     title: 'ด่านที่ 1: อาหารเช้า',
-    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วกด E หรือคลิกที่กระเป๋าเพื่อจัดอาหารเช้าให้ครบ 3 อย่าง',
+    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วกด E หรือคลิกไอคอนกระเป๋าเพื่อจัดอาหารเช้าให้ครบ 3 อย่าง',
     pickCount: 3,
     ingredients: ['rice', 'egg', 'banana', 'apple', 'bread', 'milk', 'sausage', 'cucumber'],
     counterSlots: [70, 165, 260, 355, 450, 545, 640, 735].map(x => ({ x, y: 138 })),
@@ -175,25 +175,10 @@ const UI = {
     $('mission-title').textContent = lv.title;
     $('mission-text').textContent =
       `${lv.mission} (เก็บแล้ว ${state.collected.length}/${lv.ingredients.length} · ในจาน ${state.plated.length}/${lv.pickCount})`;
-    $('bag-count').textContent = `${state.collected.length}/${lv.ingredients.length}`;
-    $('bag-slots').innerHTML = '';
-    for (let i = 0; i < lv.ingredients.length; i++) {
-      const b = document.createElement('button');
-      const id = state.collected[i];
-      b.className = 'bag-slot';
-      b.style.display = 'flex';
-      b.style.alignItems = 'center';
-      b.style.justifyContent = 'center';
-      b.style.fontSize = '24px';
-      
-      if (id) {
-        const f = FOOD_DB[id];
-        b.classList.add('filled'); if (state.plated.includes(id)) b.classList.add('plated');
-        b.textContent = f.emoji; b.title = `${f.name} – คลิกเพื่อรวมเข้าจานหรือดูข้อมูล`;
-        b.onclick = () => UI.openPlate();
-      } else { b.disabled = true; b.tabIndex = -1; }
-      $('bag-slots').appendChild(b);
-    }
+    
+    // อัปเดตตัวเลขจำนวนไอเทมที่ปุ่มไอคอนกระเป๋า
+    const bagCountEl = $('bag-count');
+    if (bagCountEl) bagCountEl.textContent = `${state.collected.length}/${lv.ingredients.length}`;
   },
 
   openInfo(id) {
@@ -358,10 +343,11 @@ const UI = {
     $('wm-back').onclick = UI.closeWarn;
     $('wm-go').onclick = UI.showSummary;
     
-    const bagWrap = document.querySelector('.bag-wrap');
-    if (bagWrap) {
-      bagWrap.style.cursor = 'pointer';
-      bagWrap.onclick = () => {
+    // ผูกอีเวนต์คลิกสำหรับปุ่มไอคอนกระเป๋า
+    const bagBtn = $('bag-icon-btn') || document.querySelector('.bag-wrap');
+    if (bagBtn) {
+      bagBtn.style.cursor = 'pointer';
+      bagBtn.onclick = () => {
         if (state.mode === 'play') {
           UI.openPlate();
         }
@@ -370,10 +356,71 @@ const UI = {
   },
 };
 
-/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) ---------- */
+/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) + ปรับแต่ง CSS ขนาดฟอนต์มือถือและคำแนะนำ Joy-stick ---------- */
 const touch = { x: 0, y: 0, e: false, f: false };
 let uiScaleX = 1, uiScaleY = 1;
+
+function injectMobileStyles() {
+  if (document.getElementById('mobile-custom-style')) return;
+  const style = document.createElement('style');
+  style.id = 'mobile-custom-style';
+  style.textContent = `
+    @media screen and (max-width: 900px), (pointer: coarse) {
+      /* ขยายขนาดฟอนต์โดยรวมให้อ่านชัดเจนในมือถือ */
+      body, button, input, select {
+        font-size: 18px !important;
+      }
+      .mission-box h2 {
+        font-size: 22px !important;
+      }
+      .mission-box p {
+        font-size: 17px !important;
+      }
+      .bag-title {
+        font-size: 20px !important;
+      }
+      .help-box {
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+      }
+      .modal-box h3 {
+        font-size: 22px !important;
+      }
+      .modal-box p, .modal-box td, .modal-box th {
+        font-size: 16px !important;
+      }
+      /* ปรับแต่งปุ่ม E และ F ให้มีขนาดใหญ่พอดีกับนิ้วมือ */
+      .touch-btn {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 24px !important;
+        font-weight: bold !important;
+      }
+      /* คำแนะนำวิธีใช้ปุ่มบังคับทิศทาง (Joy-stick) */
+      #joy-container::after, #joy::after {
+        content: "ใช้นิ้วลากปุ่มนี้เพื่อบังคับทิศทาง";
+        position: absolute;
+        bottom: -28px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        color: #1f2d4a;
+        font-weight: bold;
+        white-space: nowrap;
+        background: rgba(255, 253, 246, 0.95);
+        padding: 3px 8px;
+        border: 1px solid #1f2d4a;
+        border-radius: 6px;
+        pointer-events: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function bindTouch() {
+  injectMobileStyles();
   const wrap = $('game-wrap');
   const isTouch = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
   if (isTouch) wrap.classList.add('touch');
@@ -384,7 +431,6 @@ function bindTouch() {
 
   const move = ev => {
     const r = base.getBoundingClientRect();
-    // getBoundingClientRect() is already scaled; convert pointer coordinates back to game-design pixels.
     const dx0 = (ev.clientX - (r.left + r.width / 2)) / uiScaleX;
     const dy0 = (ev.clientY - (r.top + r.height / 2)) / uiScaleY;
     let dx = dx0, dy = dy0;
@@ -419,6 +465,7 @@ function bindTouch() {
 
   const bindAction = (id, key) => {
     const button = $(id);
+    if (!button) return;
     button.addEventListener('pointerdown', ev => {
       ev.preventDefault();
       if (key === 'e') touch.e = true;
@@ -429,7 +476,6 @@ function bindTouch() {
   bindAction('btn-e', 'e');
   bindAction('btn-f', 'f');
 
-  // Fullscreen is initiated only after a user click, as required by browsers.
   const fsButton = $('fullscreen-btn');
   if (fsButton) {
     fsButton.addEventListener('click', async () => {
@@ -573,16 +619,13 @@ class KitchenScene extends Phaser.Scene {
     const near = locked ? null : this.nearest();
     this.items.forEach(it => { if (!it.collected) it.visual.setScale(near && near.item === it ? 1.25 : 1); });
     
-    // ตรวจสอบสถานะว่ามีการเก็บวัตถุดิบไว้ในกระเป๋าแล้วหรือยัง
     if (near) {
       const txt = `กด E เก็บ${FOOD_DB[near.item.id].name} · F ดูข้อมูล`;
       this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
     } else if (state.collected.length > 0) {
-      // แสดงคำแนะนำกด E เมื่อมีวัตถุดิบในกระเป๋าอย่างน้อย 1 ชิ้นขึ้นไปเท่านั้น
       const txt = `กด E เพื่อจัดอาหารในช่องเก็บของ`;
       this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
     } else {
-      // ซ่อนคำแนะนำเมื่อเริ่มต้นเกม (ยังไม่มีวัตถุดิบในกระเป๋า)
       this.prompt.setVisible(false);
     }
 
@@ -605,18 +648,18 @@ new Phaser.Game({
   type: Phaser.AUTO, width: CFG.W, height: CFG.H, parent: 'game', backgroundColor: '#dbe8ef',
   scene: KitchenScene,
 });
+
 function fit() {
   const viewport = window.visualViewport;
   const vw = Math.max(1, viewport ? viewport.width : window.innerWidth);
   const vh = Math.max(1, viewport ? viewport.height : window.innerHeight);
   const wrap = $('game-wrap');
 
-  // Fill the entire available viewport (no letterbox margins).
-  // Phaser's internal world remains 800x540; only the presentation layer scales.
   uiScaleX = vw / 960;
   uiScaleY = vh / 540;
   wrap.style.transform = `scale(${uiScaleX}, ${uiScaleY})`;
 }
+
 window.addEventListener('resize', fit, { passive: true });
 window.addEventListener('orientationchange', () => setTimeout(fit, 120), { passive: true });
 document.addEventListener('fullscreenchange', fit);
