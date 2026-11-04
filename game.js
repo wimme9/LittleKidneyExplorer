@@ -365,7 +365,6 @@ const UI = {
     $('wm-back').onclick = UI.closeWarn;
     $('wm-go').onclick = UI.showSummary;
     
-    // ผูกอีเวนต์คลิกสำหรับปุ่มไอคอนกระเป๋า
     const bagBtn = $('bag-icon-btn') || document.querySelector('.bag-main-btn');
     if (bagBtn) {
       bagBtn.style.cursor = 'pointer';
@@ -378,55 +377,11 @@ const UI = {
   },
 };
 
-/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) + ปรับแต่ง CSS ขนาดฟอนต์มือถือและคำแนะนำ Joystick ---------- */
+/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) ---------- */
 const touch = { x: 0, y: 0, e: false, f: false };
 let uiScaleX = 1, uiScaleY = 1;
 
-function injectMobileStyles() {
-  if (document.getElementById('mobile-custom-style')) return;
-  const style = document.createElement('style');
-  style.id = 'mobile-custom-style';
-  style.textContent = `
-    @media screen and (max-width: 900px), (pointer: coarse) {
-      body, button, input, select {
-        font-size: 18px !important;
-      }
-      .mission-box h2 {
-        font-size: 22px !important;
-      }
-      .mission-box p {
-        font-size: 17px !important;
-      }
-      .touch-btn, .tbtn {
-        width: 80px !important;
-        height: 80px !important;
-        font-size: 24px !important;
-        font-weight: bold !important;
-      }
-      #joy-container::after, #joy::after {
-        content: "ใช้นิ้วลากปุ่มนี้เพื่อบังคับทิศทาง";
-        position: absolute;
-        bottom: -28px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 14px;
-        color: #1f2d4a;
-        font-weight: bold;
-        white-space: nowrap;
-        background: rgba(255, 253, 246, 0.95);
-        padding: 3px 8px;
-        border: 1px solid #1f2d4a;
-        border-radius: 6px;
-        pointer-events: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-      }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
 function bindTouch() {
-  injectMobileStyles();
   const wrap = $('game-wrap');
   const isTouch = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
   if (isTouch) wrap.classList.add('touch');
@@ -455,19 +410,21 @@ function bindTouch() {
     knob.style.transform = 'translate(0,0)';
   };
 
-  base.addEventListener('pointerdown', ev => {
-    ev.preventDefault();
-    if (pid !== null) return;
-    pid = ev.pointerId;
-    base.setPointerCapture(pid);
-    move(ev);
-  });
-  base.addEventListener('pointermove', ev => { if (ev.pointerId === pid) move(ev); });
-  base.addEventListener('pointerup', end);
-  base.addEventListener('pointercancel', end);
-  base.addEventListener('lostpointercapture', () => {
-    pid = null; touch.x = touch.y = 0; knob.style.transform = 'translate(0,0)';
-  });
+  if (base) {
+    base.addEventListener('pointerdown', ev => {
+      ev.preventDefault();
+      if (pid !== null) return;
+      pid = ev.pointerId;
+      base.setPointerCapture(pid);
+      move(ev);
+    });
+    base.addEventListener('pointermove', ev => { if (ev.pointerId === pid) move(ev); });
+    base.addEventListener('pointerup', end);
+    base.addEventListener('pointercancel', end);
+    base.addEventListener('lostpointercapture', () => {
+      pid = null; touch.x = touch.y = 0; knob.style.transform = 'translate(0,0)';
+    });
+  }
 
   const bindAction = (id, key) => {
     const button = $(id);
@@ -594,10 +551,18 @@ class KitchenScene extends Phaser.Scene {
   }
 
   update(time, dt) {
-    const K = this.keys, JD = Phaser.Input.Keyboard.JustDown;
-    const pressE = JD(K.e) || touch.e, pressF = JD(K.f) || touch.f, pressEsc = JD(K.esc);
-    touch.e = touch.f = false;
-    if (pressEsc) UI.escape();
+    const K = this.keys;
+    const pressE = Phaser.Input.Keyboard.JustDown(K.e) || touch.e;
+    const pressF = Phaser.Input.Keyboard.JustDown(K.f) || touch.f;
+    const pressEsc = Phaser.Input.Keyboard.JustDown(K.esc);
+    
+    touch.e = false;
+    touch.f = false;
+
+    if (pressEsc) {
+      UI.escape();
+      return;
+    }
 
     const locked = !UI.canPlay();
     $('game-wrap').classList.toggle('locked', locked);
@@ -649,28 +614,39 @@ class KitchenScene extends Phaser.Scene {
   }
 }
 
-/* ---------- เริ่มเกม + ปรับขนาดหน้าจอ ---------- */
+/* ---------- เริ่มเกม + ปรับขนาดหน้าจอให้พอดีกับอุปกรณ์ ---------- */
 new Phaser.Game({
   type: Phaser.AUTO, width: CFG.W, height: CFG.H, parent: 'game', backgroundColor: '#dbe8ef',
   scene: KitchenScene,
 });
 
 function fit() {
-  const viewport = window.visualViewport;
-  const vw = Math.max(1, viewport ? viewport.width : window.innerWidth);
-  const vh = Math.max(1, viewport ? viewport.height : window.innerHeight);
+  const vw = Math.max(1, window.innerWidth);
+  const vh = Math.max(1, window.innerHeight);
   const wrap = $('game-wrap');
 
-  // คำนวณอัตราส่วนการปรับขนาดของเกม (Keep Aspect Ratio 800x540)
-  const scale = Math.min(vw / 800, vh / 540);
+  if (!wrap) return;
+
+  const scaleX = vw / CFG.W;
+  const scaleY = vh / CFG.H;
+  const scale = Math.min(scaleX, scaleY);
+
   uiScaleX = scale;
   uiScaleY = scale;
+
+  wrap.style.width = CFG.W + 'px';
+  wrap.style.height = CFG.H + 'px';
   wrap.style.transform = `scale(${scale})`;
+  wrap.style.transformOrigin = 'center center';
+  wrap.style.left = (vw - CFG.W) / 2 + 'px';
+  wrap.style.top = (vh - CFG.H) / 2 + 'px';
 }
 
 window.addEventListener('resize', fit, { passive: true });
-window.addEventListener('orientationchange', () => setTimeout(fit, 120), { passive: true });
+window.addEventListener('orientationchange', () => setTimeout(fit, 150), { passive: true });
 document.addEventListener('fullscreenchange', fit);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', fit, { passive: true });
+
+window.addEventListener('load', fit);
 fit();
 bindTouch();
