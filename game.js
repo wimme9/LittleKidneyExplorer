@@ -175,10 +175,32 @@ const UI = {
     $('mission-title').textContent = lv.title;
     $('mission-text').textContent =
       `${lv.mission} (เก็บแล้ว ${state.collected.length}/${lv.ingredients.length} · ในจาน ${state.plated.length}/${lv.pickCount})`;
-    
-    // อัปเดตตัวเลขจำนวนไอเทมที่ปุ่มไอคอนกระเป๋า
+
     const bagCountEl = $('bag-count');
     if (bagCountEl) bagCountEl.textContent = `${state.collected.length}/${lv.ingredients.length}`;
+
+    const slotsEl = $('bag-slots');
+    if (slotsEl) {
+      slotsEl.innerHTML = '';
+      for (let i = 0; i < lv.ingredients.length; i++) {
+        const b = document.createElement('button');
+        const id = state.collected[i];
+        b.className = 'bag-slot';
+        
+        if (id) {
+          const f = FOOD_DB[id];
+          b.classList.add('filled');
+          if (state.plated.includes(id)) b.classList.add('plated');
+          b.textContent = f.emoji;
+          b.title = `${f.name} – กดเพื่อจัดอาหารเข้าจาน`;
+          b.onclick = () => UI.openPlate();
+        } else {
+          b.disabled = true;
+          b.tabIndex = -1;
+        }
+        slotsEl.appendChild(b);
+      }
+    }
   },
 
   openInfo(id) {
@@ -344,7 +366,7 @@ const UI = {
     $('wm-go').onclick = UI.showSummary;
     
     // ผูกอีเวนต์คลิกสำหรับปุ่มไอคอนกระเป๋า
-    const bagBtn = $('bag-icon-btn') || document.querySelector('.bag-wrap');
+    const bagBtn = $('bag-icon-btn') || document.querySelector('.bag-main-btn');
     if (bagBtn) {
       bagBtn.style.cursor = 'pointer';
       bagBtn.onclick = () => {
@@ -356,7 +378,7 @@ const UI = {
   },
 };
 
-/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) + ปรับแต่ง CSS ขนาดฟอนต์มือถือและคำแนะนำ Joy-stick ---------- */
+/* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) + ปรับแต่ง CSS ขนาดฟอนต์มือถือและคำแนะนำ Joystick ---------- */
 const touch = { x: 0, y: 0, e: false, f: false };
 let uiScaleX = 1, uiScaleY = 1;
 
@@ -366,7 +388,6 @@ function injectMobileStyles() {
   style.id = 'mobile-custom-style';
   style.textContent = `
     @media screen and (max-width: 900px), (pointer: coarse) {
-      /* ขยายขนาดฟอนต์โดยรวมให้อ่านชัดเจนในมือถือ */
       body, button, input, select {
         font-size: 18px !important;
       }
@@ -376,27 +397,12 @@ function injectMobileStyles() {
       .mission-box p {
         font-size: 17px !important;
       }
-      .bag-title {
-        font-size: 20px !important;
-      }
-      .help-box {
-        font-size: 16px !important;
-        line-height: 1.5 !important;
-      }
-      .modal-box h3 {
-        font-size: 22px !important;
-      }
-      .modal-box p, .modal-box td, .modal-box th {
-        font-size: 16px !important;
-      }
-      /* ปรับแต่งปุ่ม E และ F ให้มีขนาดใหญ่พอดีกับนิ้วมือ */
-      .touch-btn {
+      .touch-btn, .tbtn {
         width: 80px !important;
         height: 80px !important;
         font-size: 24px !important;
         font-weight: bold !important;
       }
-      /* คำแนะนำวิธีใช้ปุ่มบังคับทิศทาง (Joy-stick) */
       #joy-container::after, #joy::after {
         content: "ใช้นิ้วลากปุ่มนี้เพื่อบังคับทิศทาง";
         position: absolute;
@@ -655,9 +661,11 @@ function fit() {
   const vh = Math.max(1, viewport ? viewport.height : window.innerHeight);
   const wrap = $('game-wrap');
 
-  uiScaleX = vw / 960;
-  uiScaleY = vh / 540;
-  wrap.style.transform = `scale(${uiScaleX}, ${uiScaleY})`;
+  // คำนวณอัตราส่วนการปรับขนาดของเกม (Keep Aspect Ratio 800x540)
+  const scale = Math.min(vw / 800, vh / 540);
+  uiScaleX = scale;
+  uiScaleY = scale;
+  wrap.style.transform = `scale(${scale})`;
 }
 
 window.addEventListener('resize', fit, { passive: true });

@@ -21,12 +21,17 @@
         <div id="mission-text"></div>
       </div>
 
-      <!-- แถบเก็บวัตถุดิบด้านขวา -->
-      <aside id="hud-right">
-        <div class="hud-label">กระเป๋า <b id="bag-count">0/8</b></div>
+      <!-- แถบเก็บวัตถุดิบด้านล่างจอ (Roblox Style Hotbar) -->
+      <div class="hotbar-container">
+        <!-- ปุ่มไอคอนกระเป๋าหลักสำหรับกดเปิดหน้าต่างจัดอาหาร -->
+        <button id="bag-icon-btn" class="bag-main-btn" type="button" aria-label="เปิดกระเป๋าจัดอาหาร" title="เปิดกระเป๋า">
+          <span class="bag-icon">🎒</span>
+          <span id="bag-count" class="bag-badge">0/8</span>
+        </button>
+        
+        <!-- ช่องสล็อตใส่วัตถุดิบแนวนอน -->
         <div id="bag-slots"></div>
-        <p class="hud-keys">A/D/W/S หรือ ลูกศร เดิน<br>E เก็บ / จัดอาหาร<br>F ดูข้อมูล<br>Esc ปิดหน้าต่าง</p>
-      </aside>
+      </div>
 
       <!-- ปุ่มควบคุมบนมือถือ -->
       <div id="touch">
