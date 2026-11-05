@@ -13,7 +13,6 @@
   <div id="stage">
     <div id="game-wrap">
       <div id="game"></div>
-      <button id="fullscreen-btn" class="screen-btn" type="button" aria-label="ขยายเต็มหน้าจอ" title="เต็มหน้าจอ">⛶</button>
 
       <!-- แถบภารกิจด้านบน -->
       <div id="hud-top">
@@ -21,17 +20,14 @@
         <div id="mission-text"></div>
       </div>
 
-      <!-- แถบเก็บวัตถุดิบด้านล่างจอ (Roblox Style Hotbar) -->
-      <div class="hotbar-container">
-        <!-- ปุ่มไอคอนกระเป๋าหลักสำหรับกดเปิดหน้าต่างจัดอาหาร -->
-        <button id="bag-icon-btn" class="bag-main-btn" type="button" aria-label="เปิดกระเป๋าจัดอาหาร" title="เปิดกระเป๋า">
-          <span class="bag-icon">🎒</span>
-          <span id="bag-count" class="bag-badge">0/8</span>
-        </button>
-        
-        <!-- ช่องสล็อตใส่วัตถุดิบแนวนอน -->
+      <!-- แถบเก็บวัตถุดิบด้านล่าง -->
+      <aside id="hud-bottom">
+        <div class="hud-left-group">
+          <div class="hud-label">กระเป๋า <b id="bag-count">0/8</b></div>
+          <p class="hud-keys">A/D/W/S หรือ ลูกศร เดิน | E เก็บ/จัดอาหาร | F ดูข้อมูล | Esc ปิดหน้าต่าง</p>
+        </div>
         <div id="bag-slots"></div>
-      </div>
+      </aside>
 
       <!-- ปุ่มควบคุมบนมือถือ -->
       <div id="touch">

@@ -56,15 +56,15 @@ const LEVELS = [
   {
     id: 'breakfast',
     title: 'ด่านที่ 1: อาหารเช้า',
-    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วกด E หรือคลิกไอคอนกระเป๋าเพื่อจัดอาหารเช้าให้ครบ 3 อย่าง',
+    mission: 'เดินเก็บวัตถุดิบจากเคาน์เตอร์ แล้วกด E หรือคลิกที่กระเป๋าเพื่อจัดอาหารเช้าให้ครบ 3 อย่าง',
     pickCount: 3,
     ingredients: ['rice', 'egg', 'banana', 'apple', 'bread', 'milk', 'sausage', 'cucumber'],
-    counterSlots: [70, 165, 260, 355, 450, 545, 640, 735].map(x => ({ x, y: 138 })),
-    start: { x: 400, y: 330 },
+    counterSlots: [90, 210, 330, 450, 570, 690, 810, 900].map(x => ({ x, y: 138 })),
+    start: { x: 480, y: 280 },
   },
 ];
 
-const CFG = { W: 800, H: 540, speed: 210, pickRange: 85, minX: 30, maxX: 770, minY: 208, maxY: 515, playerR: 18 };
+const CFG = { W: 960, H: 450, speed: 210, pickRange: 85, minX: 30, maxX: 930, minY: 208, maxY: 425, playerR: 18 };
 
 /* ---------- 2) ตรรกะคำนวณ + แจ้งเตือน ---------- */
 const fmt = v => (Math.round(v * 10) / 10).toLocaleString('en-US');
@@ -175,31 +175,24 @@ const UI = {
     $('mission-title').textContent = lv.title;
     $('mission-text').textContent =
       `${lv.mission} (เก็บแล้ว ${state.collected.length}/${lv.ingredients.length} · ในจาน ${state.plated.length}/${lv.pickCount})`;
-
-    const bagCountEl = $('bag-count');
-    if (bagCountEl) bagCountEl.textContent = `${state.collected.length}/${lv.ingredients.length}`;
-
-    const slotsEl = $('bag-slots');
-    if (slotsEl) {
-      slotsEl.innerHTML = '';
-      for (let i = 0; i < lv.ingredients.length; i++) {
-        const b = document.createElement('button');
-        const id = state.collected[i];
-        b.className = 'bag-slot';
-        
-        if (id) {
-          const f = FOOD_DB[id];
-          b.classList.add('filled');
-          if (state.plated.includes(id)) b.classList.add('plated');
-          b.textContent = f.emoji;
-          b.title = `${f.name} – กดเพื่อจัดอาหารเข้าจาน`;
-          b.onclick = () => UI.openPlate();
-        } else {
-          b.disabled = true;
-          b.tabIndex = -1;
-        }
-        slotsEl.appendChild(b);
-      }
+    $('bag-count').textContent = `${state.collected.length}/${lv.ingredients.length}`;
+    $('bag-slots').innerHTML = '';
+    for (let i = 0; i < lv.ingredients.length; i++) {
+      const b = document.createElement('button');
+      const id = state.collected[i];
+      b.className = 'bag-slot';
+      b.style.display = 'flex';
+      b.style.alignItems = 'center';
+      b.style.justifyContent = 'center';
+      b.style.fontSize = '24px';
+      
+      if (id) {
+        const f = FOOD_DB[id];
+        b.classList.add('filled'); if (state.plated.includes(id)) b.classList.add('plated');
+        b.textContent = f.emoji; b.title = `${f.name} – คลิกเพื่อรวมเข้าจานหรือดูข้อมูล`;
+        b.onclick = () => UI.openPlate();
+      } else { b.disabled = true; b.tabIndex = -1; }
+      $('bag-slots').appendChild(b);
     }
   },
 
@@ -365,10 +358,10 @@ const UI = {
     $('wm-back').onclick = UI.closeWarn;
     $('wm-go').onclick = UI.showSummary;
     
-    const bagBtn = $('bag-icon-btn') || document.querySelector('.bag-main-btn');
-    if (bagBtn) {
-      bagBtn.style.cursor = 'pointer';
-      bagBtn.onclick = () => {
+    const bagWrap = document.querySelector('.bag-wrap');
+    if (bagWrap) {
+      bagWrap.style.cursor = 'pointer';
+      bagWrap.onclick = () => {
         if (state.mode === 'play') {
           UI.openPlate();
         }
@@ -380,7 +373,6 @@ const UI = {
 /* ---------- 3.5) ควบคุมด้วยการสัมผัส (มือถือ) ---------- */
 const touch = { x: 0, y: 0, e: false, f: false };
 let uiScaleX = 1, uiScaleY = 1;
-
 function bindTouch() {
   const wrap = $('game-wrap');
   const isTouch = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
@@ -410,25 +402,22 @@ function bindTouch() {
     knob.style.transform = 'translate(0,0)';
   };
 
-  if (base) {
-    base.addEventListener('pointerdown', ev => {
-      ev.preventDefault();
-      if (pid !== null) return;
-      pid = ev.pointerId;
-      base.setPointerCapture(pid);
-      move(ev);
-    });
-    base.addEventListener('pointermove', ev => { if (ev.pointerId === pid) move(ev); });
-    base.addEventListener('pointerup', end);
-    base.addEventListener('pointercancel', end);
-    base.addEventListener('lostpointercapture', () => {
-      pid = null; touch.x = touch.y = 0; knob.style.transform = 'translate(0,0)';
-    });
-  }
+  base.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    if (pid !== null) return;
+    pid = ev.pointerId;
+    base.setPointerCapture(pid);
+    move(ev);
+  });
+  base.addEventListener('pointermove', ev => { if (ev.pointerId === pid) move(ev); });
+  base.addEventListener('pointerup', end);
+  base.addEventListener('pointercancel', end);
+  base.addEventListener('lostpointercapture', () => {
+    pid = null; touch.x = touch.y = 0; knob.style.transform = 'translate(0,0)';
+  });
 
   const bindAction = (id, key) => {
     const button = $(id);
-    if (!button) return;
     button.addEventListener('pointerdown', ev => {
       ev.preventDefault();
       if (key === 'e') touch.e = true;
@@ -438,22 +427,6 @@ function bindTouch() {
   };
   bindAction('btn-e', 'e');
   bindAction('btn-f', 'f');
-
-  const fsButton = $('fullscreen-btn');
-  if (fsButton) {
-    fsButton.addEventListener('click', async () => {
-      try {
-        if (!document.fullscreenElement) {
-          await wrap.requestFullscreen?.();
-        } else {
-          await document.exitFullscreen?.();
-        }
-      } catch (err) {
-        UI.toast('เบราว์เซอร์ไม่อนุญาตให้เปิดเต็มหน้าจอ');
-      }
-      fit();
-    });
-  }
 }
 
 /* ---------- 4) ฉากเกม (Phaser) – มุมมองด้านบน (Top-down) ---------- */
@@ -483,8 +456,8 @@ class KitchenScene extends Phaser.Scene {
   drawRoom() {
     const g = this.add.graphics().setDepth(0);
     g.fillStyle(0xcfe8f5).fillRect(0, 0, CFG.W, 96);                              // ผนังด้านบน
-    for (let iy = 0; iy < 6; iy++) for (let ix = 0; ix < 13; ix++) {              // พื้นกระเบื้อง
-      g.fillStyle((ix + iy) % 2 ? 0xe9f1f6 : 0xdbe8ef).fillRect(ix * 62, 188 + iy * 62, 62, 62);
+    for (let iy = 0; iy < 5; iy++) for (let ix = 0; ix < 16; ix++) {              // พื้นกระเบื้อง
+      g.fillStyle((ix + iy) % 2 ? 0xe9f1f6 : 0xdbe8ef).fillRect(ix * 60, 188 + iy * 60, 60, 60);
     }
     g.fillStyle(0xe0a35f).fillRect(0, 96, CFG.W, 80);                             // เคาน์เตอร์ (พื้นผิวด้านบน)
     g.fillStyle(0xc98a4b).fillRect(0, 176, CFG.W, 12);                            // ขอบเคาน์เตอร์
@@ -551,18 +524,10 @@ class KitchenScene extends Phaser.Scene {
   }
 
   update(time, dt) {
-    const K = this.keys;
-    const pressE = Phaser.Input.Keyboard.JustDown(K.e) || touch.e;
-    const pressF = Phaser.Input.Keyboard.JustDown(K.f) || touch.f;
-    const pressEsc = Phaser.Input.Keyboard.JustDown(K.esc);
-    
-    touch.e = false;
-    touch.f = false;
-
-    if (pressEsc) {
-      UI.escape();
-      return;
-    }
+    const K = this.keys, JD = Phaser.Input.Keyboard.JustDown;
+    const pressE = JD(K.e) || touch.e, pressF = JD(K.f) || touch.f, pressEsc = JD(K.esc);
+    touch.e = touch.f = false;
+    if (pressEsc) UI.escape();
 
     const locked = !UI.canPlay();
     $('game-wrap').classList.toggle('locked', locked);
@@ -592,10 +557,10 @@ class KitchenScene extends Phaser.Scene {
     
     if (near) {
       const txt = `กด E เก็บ${FOOD_DB[near.item.id].name} · F ดูข้อมูล`;
-      this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
+      this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 840), p.y - 34).setVisible(true);
     } else if (state.collected.length > 0) {
       const txt = `กด E เพื่อจัดอาหารในช่องเก็บของ`;
-      this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 680), p.y - 34).setVisible(true);
+      this.prompt.setText(txt).setPosition(Phaser.Math.Clamp(p.x, 120, 840), p.y - 34).setVisible(true);
     } else {
       this.prompt.setVisible(false);
     }
@@ -614,39 +579,23 @@ class KitchenScene extends Phaser.Scene {
   }
 }
 
-/* ---------- เริ่มเกม + ปรับขนาดหน้าจอให้พอดีกับอุปกรณ์ ---------- */
+/* ---------- เริ่มเกม + ปรับขนาดหน้าจอ ---------- */
 new Phaser.Game({
   type: Phaser.AUTO, width: CFG.W, height: CFG.H, parent: 'game', backgroundColor: '#dbe8ef',
   scene: KitchenScene,
 });
-
 function fit() {
-  const vw = Math.max(1, window.innerWidth);
-  const vh = Math.max(1, window.innerHeight);
+  const viewport = window.visualViewport;
+  const vw = Math.max(1, viewport ? viewport.width : window.innerWidth);
+  const vh = Math.max(1, viewport ? viewport.height : window.innerHeight);
   const wrap = $('game-wrap');
 
-  if (!wrap) return;
-
-  const scaleX = vw / CFG.W;
-  const scaleY = vh / CFG.H;
-  const scale = Math.min(scaleX, scaleY);
-
-  uiScaleX = scale;
-  uiScaleY = scale;
-
-  wrap.style.width = CFG.W + 'px';
-  wrap.style.height = CFG.H + 'px';
-  wrap.style.transform = `scale(${scale})`;
-  wrap.style.transformOrigin = 'center center';
-  wrap.style.left = (vw - CFG.W) / 2 + 'px';
-  wrap.style.top = (vh - CFG.H) / 2 + 'px';
+  uiScaleX = vw / 960;
+  uiScaleY = vh / 540;
+  wrap.style.transform = `scale(${uiScaleX}, ${uiScaleY})`;
 }
-
 window.addEventListener('resize', fit, { passive: true });
-window.addEventListener('orientationchange', () => setTimeout(fit, 150), { passive: true });
-document.addEventListener('fullscreenchange', fit);
+window.addEventListener('orientationchange', () => setTimeout(fit, 120), { passive: true });
 if (window.visualViewport) window.visualViewport.addEventListener('resize', fit, { passive: true });
-
-window.addEventListener('load', fit);
 fit();
 bindTouch();
