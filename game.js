@@ -378,7 +378,7 @@ function bindTouch() {
   if (isTouch) wrap.classList.add('touch');
 
   const base = $('joy'), knob = $('joy-knob');
-  const R = 50;
+  const R = () => (base.offsetWidth - knob.offsetWidth) / 2;   // ระยะลากสูงสุดของปุ่มจอย
   let pid = null;
 
   const move = ev => {
@@ -388,11 +388,12 @@ function bindTouch() {
     const dy0 = (ev.clientY - (r.top + r.height / 2)) / k;
     let dx = dx0, dy = dy0;
     const len = Math.hypot(dx, dy);
-    if (len > R) { dx *= R / len; dy *= R / len; }
+    const Rm = R();
+    if (len > Rm) { dx *= Rm / len; dy *= Rm / len; }
     knob.style.transform = `translate(${dx}px,${dy}px)`;
     const magnitude = Math.hypot(dx, dy);
-    touch.x = magnitude < 8 ? 0 : dx / R;
-    touch.y = magnitude < 8 ? 0 : dy / R;
+    touch.x = magnitude < 8 ? 0 : dx / Rm;
+    touch.y = magnitude < 8 ? 0 : dy / Rm;
   };
 
   const end = ev => {

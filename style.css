@@ -38,14 +38,23 @@ body{overscroll-behavior:none}
 #game-wrap.touch .hud-keys{display:none}
 #game-wrap.locked #touch{display:none!important}
 #joy,.tbtn{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-#joy{position:absolute;left:20px;bottom:84px;width:140px;height:140px;border-radius:50%;background:rgba(255,253,246,.58);border:4px solid rgba(31,45,74,.78);display:flex;align-items:flex-start;justify-content:center}
-.joy-hint{font-size:16px;font-weight:700;color:var(--ink);padding-top:6px;pointer-events:none}
-#joy-knob{position:absolute;left:42px;top:42px;width:48px;height:48px;border-radius:50%;background:var(--butter);border:4px solid var(--ink);box-shadow:0 2px 5px #0003}
-.tbtn{position:absolute;border-radius:50%;border:4px solid var(--ink);background:var(--butter);color:var(--ink);font-family:'Mali',sans-serif;font-weight:700;font-size:34px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;box-shadow:0 3px 0 #1f2d4a55}
-.tbtn small{font-size:15px;font-weight:700}
+#joy{position:absolute;left:30px;bottom:18px;width:184px;height:184px;border-radius:50%;background:rgba(255,253,246,.50);border:5px solid rgba(31,45,74,.85);display:flex;align-items:flex-start;justify-content:center;z-index:6}
+.joy-hint{font-size:20px;font-weight:700;color:var(--ink);padding-top:8px;pointer-events:none}
+#joy-knob{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--butter);border:5px solid var(--ink);box-shadow:0 3px 8px #0004}
+.tbtn{position:absolute;z-index:6;border-radius:50%;border:5px solid var(--ink);background:var(--butter);color:var(--ink);font-family:'Mali',sans-serif;font-weight:700;font-size:44px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 0 #1f2d4a55}
+.tbtn small{font-size:18px;font-weight:700}
 .tbtn:active{background:var(--mint);color:#fff;transform:scale(.96)}
-#btn-e{right:16px;bottom:84px;width:88px;height:88px}
-#btn-f{right:112px;bottom:96px;width:70px;height:70px;font-size:28px}
+#btn-e{right:30px;bottom:24px;width:136px;height:136px}
+#btn-f{right:176px;bottom:32px;width:96px;height:96px;font-size:36px}
+
+/* ===== โหมดมือถือ: ช่องเก็บของเป็นแถบเล็กกลางจอ (คล้าย hotbar มายคราฟ) ระหว่างจอยกับปุ่ม F/E ===== */
+#game-wrap.touch{background:#16213a}
+#game-wrap.touch #hud-bottom{left:50%;right:auto;top:auto;bottom:12px;transform:translateX(-50%);width:auto;height:auto;padding:5px;gap:0;background:rgba(22,33,58,.92);border:3px solid #c9d3e3;border-radius:10px;z-index:5}
+#game-wrap.touch .hud-left-group{display:none}
+#game-wrap.touch #bag-slots{flex:none;gap:4px;justify-content:center;overflow:visible}
+#game-wrap.touch .bag-slot{width:44px;height:44px;border:2px solid #7d8aa3;border-radius:6px;background:rgba(255,255,255,.10);font-size:26px!important}
+#game-wrap.touch .bag-slot.filled{border-color:var(--ink);background:var(--butter)}
+#game-wrap.touch .bag-slot.plated{opacity:.5}
 
 #rotate{display:none;position:fixed;inset:0;z-index:99;background:var(--ink);color:#fff;align-items:center;justify-content:center;text-align:center;font-size:25px;padding:24px}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
