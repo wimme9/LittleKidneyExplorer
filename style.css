@@ -10,8 +10,11 @@ body{overscroll-behavior:none}
 #stage{position:fixed;inset:0;overflow:hidden;padding:0;margin:0;background:#16213a}
 
 /* กล่องเกมขนาดออกแบบ 960x540 จัดกึ่งกลางจอ แล้วถูก scale ด้วย JS (transform ตั้งใน fit()) */
-#game-wrap{position:absolute;left:50%;top:50%;width:960px;height:540px;flex:none;transform:translate(-50%,-50%);transform-origin:center center;background:#000;overflow:hidden;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-#game{position:absolute;left:0;top:0;width:960px;height:450px}
+#game-wrap{position:absolute;inset:0;width:100%;height:100%;background:#000;overflow:hidden;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* #ui = ชั้น UI ขนาดออกแบบ 960x540 ขึ้นไป ขยายด้วย scale เท่ากันทุกแกน (ตัวอักษรไม่ยืด) ยึดขอบด้วย left/right/top/bottom */
+#ui{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden}
+#safe{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#game{position:absolute;inset:0;width:100%;height:100%}
 #game canvas{display:block;width:100%!important;height:100%!important}
 .hidden{display:none!important}
 
@@ -32,21 +35,21 @@ body{overscroll-behavior:none}
 .bag-slot:disabled{cursor:default}
 .hud-keys{position:absolute;left:12px;bottom:10px;width:260px;margin:0;font-size:14px;line-height:1.35;color:#c9d3e3}
 #game-wrap.touch .hud-keys{display:none}
-#toast{position:absolute;top:70px;left:480px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 18px;border-radius:999px;font-size:21px;z-index:40;white-space:nowrap;max-width:75%;text-align:center}
+#toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 18px;border-radius:999px;font-size:21px;z-index:40;white-space:nowrap;max-width:75%;text-align:center}
 
 /* Mobile touch controls */
 #touch{display:none}
 #game-wrap.touch #touch{display:block}
 #game-wrap.locked #touch{display:none!important}
 #joy,.tbtn{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
-#joy{position:absolute;left:30px;top:50%;margin-top:-92px;width:184px;height:184px;border-radius:50%;background:rgba(255,253,246,.50);border:5px solid rgba(31,45,74,.85);display:flex;align-items:flex-start;justify-content:center;z-index:6}
+#joy{position:absolute;left:24px;bottom:22px;width:172px;height:172px;border-radius:50%;background:rgba(255,253,246,.50);border:5px solid rgba(31,45,74,.85);display:flex;align-items:flex-start;justify-content:center;z-index:6}
 .joy-hint{font-size:20px;font-weight:700;color:var(--ink);padding-top:8px;pointer-events:none}
 #joy-knob{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--butter);border:5px solid var(--ink);box-shadow:0 3px 8px #0004}
 .tbtn{position:absolute;z-index:6;border-radius:50%;border:5px solid var(--ink);background:var(--butter);color:var(--ink);font-family:'Mali',sans-serif;font-weight:700;font-size:44px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 0 #1f2d4a55}
 .tbtn small{font-size:18px;font-weight:700}
 .tbtn:active{background:var(--mint);color:#fff;transform:scale(.96)}
-#btn-e{right:30px;top:50%;margin-top:-68px;width:136px;height:136px}
-#btn-f{right:182px;top:50%;margin-top:-48px;width:96px;height:96px;font-size:36px}
+#btn-e{right:24px;bottom:22px;width:124px;height:124px}
+#btn-f{right:162px;bottom:22px;width:88px;height:88px;font-size:34px}
 
 #game-wrap.touch{background:#16213a}
 
@@ -131,5 +134,5 @@ td.g{color:#1f8f5a}td.y{color:#8a5f00}td.r{color:#c0310f}
 .info-card table td:nth-child(3),.info-card table td:nth-child(4){text-align:right}
 #sm-table td:last-child{white-space:nowrap}
 
-/* เลย์เอาต์ภายในกล่อง 960x540 คงที่ทุกอุปกรณ์ ขนาดจริงปรับด้วย scale ใน JS จึงไม่ใช้ media query ตามขนาดจอ */
+/* UI ออกแบบในหน่วย 960x540 แล้วขยายด้วย scale ใน JS (fit) ส่วนฉากเกมขยายพื้นหลังเต็มจอด้วยกล้อง Phaser */
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

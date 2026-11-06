@@ -455,17 +455,30 @@ class KitchenScene extends Phaser.Scene {
       left: 'LEFT', right: 'RIGHT', up: 'UP', down: 'DOWN', a: 'A', d: 'D', w: 'W', s: 'S', e: 'E', f: 'F', esc: 'ESC',
     });
     UI.bind(); UI.renderHud();
+    this.layoutCamera(); this.scale.on('resize', this.layoutCamera, this);
   }
 
   drawRoom() {
-    const g = this.add.graphics().setDepth(0);
-    g.fillStyle(0xcfe8f5).fillRect(0, 0, CFG.W, 96);                              // ผนังด้านบน
-    for (let iy = 0; iy < 5; iy++) for (let ix = 0; ix < 16; ix++) {              // พื้นกระเบื้อง
-      g.fillStyle((ix + iy) % 2 ? 0xe9f1f6 : 0xdbe8ef).fillRect(ix * 60, 188 + iy * 60, 60, 60);
+    // วาดห้องให้กว้างเกินพื้นที่ออกแบบ 960x540 เพื่อให้พื้นหลังเต็มจอทุกสัดส่วน (จอกว้าง/จอสูง)
+    const g = this.add.graphics().setDepth(0), M = 1400, W2 = CFG.W + 2 * M;
+    g.fillStyle(0xcfe8f5).fillRect(-M, -M, W2, 96 + M);                           // ผนังด้านบน
+    g.fillStyle(0xdbe8ef).fillRect(-M, 188, W2, 540 + M - 188);                   // พื้น
+    const cols = Math.ceil(M / 60), rows = Math.ceil((540 + M - 188) / 60);
+    g.fillStyle(0xe9f1f6);
+    for (let iy = 0; iy < rows; iy++) for (let ix = -cols; ix < 16 + cols; ix++) {  // ลายกระเบื้องสลับสี
+      if (((ix + iy) % 2 + 2) % 2) g.fillRect(ix * 60, 188 + iy * 60, 60, 60);
     }
-    g.fillStyle(0xe0a35f).fillRect(0, 96, CFG.W, 80);                             // เคาน์เตอร์ (พื้นผิวด้านบน)
-    g.fillStyle(0xc98a4b).fillRect(0, 176, CFG.W, 12);                            // ขอบเคาน์เตอร์
-    g.lineStyle(3, 0x1f2d4a).strokeRect(0, 96, CFG.W, 92);
+    g.fillStyle(0xe0a35f).fillRect(-M, 96, W2, 80);                               // เคาน์เตอร์ (พื้นผิวด้านบน)
+    g.fillStyle(0xc98a4b).fillRect(-M, 176, W2, 12);                              // ขอบเคาน์เตอร์
+    g.lineStyle(3, 0x1f2d4a).strokeRect(-M - 3, 96, W2 + 6, 92);
+  }
+
+  // กล้อง: ย่อ/ขยายพื้นที่ออกแบบ 960x540 ให้พอดีจอ (สัดส่วนคงที่) ส่วนเกินแสดงห้องที่วาดต่อออกไป
+  layoutCamera() {
+    const w = this.scale.width, h = this.scale.height, cam = this.cameras.main;
+    cam.setSize(w, h);
+    cam.setZoom(Math.max(0.1, Math.min(w / DESIGN_W, h / DESIGN_H)));
+    cam.centerOn(DESIGN_W / 2, DESIGN_H / 2);
   }
 
   makeItem(id, pos) {
@@ -583,29 +596,35 @@ class KitchenScene extends Phaser.Scene {
   }
 }
 
-/* ---------- เริ่มเกม + ตั้งค่า Responsive Scale ด้วย Phaser FIT ---------- */
-new Phaser.Game({
+/* ---------- เริ่มเกม + Responsive: ฉากเต็มจอ, UI ยึดขอบแล้วขยายด้วยสเกลเดียวกัน ---------- */
+const DESIGN_W = 960, DESIGN_H = 540;   // พื้นที่ออกแบบ (UI และฉากหลัก) ที่ต้องมองเห็นครบเสมอ
+let viewScale = 1;
+
+const game = new Phaser.Game({
   type: Phaser.AUTO,
-  width: CFG.W,
-  height: CFG.H,
   parent: 'game',
+  width: '100%',
+  height: '100%',
   backgroundColor: '#dbe8ef',
-  scale: {
-    mode: Phaser.Scale.NONE,   // แคนวาสคงที่ 960x450 ในกล่องออกแบบ แล้ว fit() ปรับสเกลทั้งกล่องแบบคงสัดส่วน
-  },
+  scale: { mode: Phaser.Scale.RESIZE },   // แคนวาสเต็มจอจริง ไม่ยืดภาพ กล้องในฉากเป็นตัวกำหนดซูม
   scene: KitchenScene,
 });
 
-/* ปรับขนาดเกมให้พอดีทุกจอ (มือถือ/แท็บเล็ต/คอม) แบบคงสัดส่วน 16:9 ไม่ยืดภาพ
- * ย่อ/ขยายทั้งกล่องเกมเท่ากันทั้งแนวกว้างและสูง ส่วนที่เหลือเป็นขอบสีเข้ม */
-const DESIGN_W = 960, DESIGN_H = 540;
-let viewScale = 1;
+/* วัดพื้นที่ใช้งาน (หักรอยบาก/safe area) แล้วหาสเกลเดียวกันทั้งสองแกน → ตัวอักษรไม่ยืด */
 function fit() {
-  const stage = $('stage'), wrap = $('game-wrap');
-  const w = stage.clientWidth || window.innerWidth;
-  const h = stage.clientHeight || window.innerHeight;
-  viewScale = Math.max(0.1, Math.min(w / DESIGN_W, h / DESIGN_H));
-  wrap.style.transform = `translate(-50%, -50%) scale(${viewScale})`;
+  const stage = $('stage');
+  const W = stage.clientWidth || window.innerWidth, H = stage.clientHeight || window.innerHeight;
+  const cs = getComputedStyle($('safe'));
+  const sl = parseFloat(cs.paddingLeft) || 0, sr = parseFloat(cs.paddingRight) || 0;
+  const st = parseFloat(cs.paddingTop) || 0, sb = parseFloat(cs.paddingBottom) || 0;
+  const aw = Math.max(1, W - sl - sr), ah = Math.max(1, H - st - sb);
+  viewScale = Math.max(0.2, Math.min(aw / DESIGN_W, ah / DESIGN_H));
+  const ui = $('ui');
+  ui.style.left = sl + 'px'; ui.style.top = st + 'px';
+  ui.style.width = (aw / viewScale) + 'px'; ui.style.height = (ah / viewScale) + 'px';   // ชั้น UI ยืดตามสัดส่วนจอ แต่ขนาดอักษรคงที่
+  ui.style.transform = `scale(${viewScale})`;
+  if (game.scale) game.scale.refresh();
+  if (scene && scene.layoutCamera) scene.layoutCamera();
 }
 let fitRaf = 0;
 const scheduleFit = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fit); };
