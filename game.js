@@ -444,8 +444,8 @@ class KitchenScene extends Phaser.Scene {
     this.items = this.level.ingredients.map((id, i) => this.makeItem(id, this.level.counterSlots[i]));
     this.makePlayer();
     this.prompt = this.add.text(0, 0, '', {
-      fontFamily: 'Sarabun, Tahoma, sans-serif', fontSize: '21px', fontStyle: 'bold', color: '#1f2d4a',
-      backgroundColor: '#fffdf6', padding: { x: 10, y: 5 },
+      fontFamily: 'Sarabun, Tahoma, sans-serif', fontSize: '24px', fontStyle: 'bold', color: '#1f2d4a',
+      backgroundColor: '#fffdf6', padding: { x: 12, y: 6 },
     }).setOrigin(0.5, 1).setDepth(50).setVisible(false);
     this.keys = this.input.keyboard.addKeys({
       left: 'LEFT', right: 'RIGHT', up: 'UP', down: 'DOWN', a: 'A', d: 'D', w: 'W', s: 'S', e: 'E', f: 'F', esc: 'ESC',
