@@ -383,8 +383,9 @@ function bindTouch() {
 
   const move = ev => {
     const r = base.getBoundingClientRect();
-    const dx0 = ev.clientX - (r.left + r.width / 2);
-    const dy0 = ev.clientY - (r.top + r.height / 2);
+    const k = (r.width / base.offsetWidth) || 1;            // สเกลปัจจุบันของกล่องเกม
+    const dx0 = (ev.clientX - (r.left + r.width / 2)) / k;  // แปลงกลับเป็นหน่วย 960x540
+    const dy0 = (ev.clientY - (r.top + r.height / 2)) / k;
     let dx = dx0, dy = dy0;
     const len = Math.hypot(dx, dy);
     if (len > R) { dx *= R / len; dy *= R / len; }
@@ -586,17 +587,28 @@ new Phaser.Game({
   parent: 'game',
   backgroundColor: '#dbe8ef',
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER,
+    mode: Phaser.Scale.NONE,   // แคนวาสคงที่ 960x450 ในกล่องออกแบบ แล้ว fit() ปรับสเกลทั้งกล่องแบบคงสัดส่วน
   },
   scene: KitchenScene,
 });
 
+/* ปรับขนาดเกมให้พอดีทุกจอ (มือถือ/แท็บเล็ต/คอม) แบบคงสัดส่วน 16:9 ไม่ยืดภาพ
+ * ย่อ/ขยายทั้งกล่องเกมเท่ากันทั้งแนวกว้างและสูง ส่วนที่เหลือเป็นขอบสีเข้ม */
+const DESIGN_W = 960, DESIGN_H = 540;
+let viewScale = 1;
 function fit() {
-  // ให้ CSS จัดการ Scale ยืดหยุ่นตามสัดส่วนจออัตโนมัติ
+  const stage = $('stage'), wrap = $('game-wrap');
+  const w = stage.clientWidth || window.innerWidth;
+  const h = stage.clientHeight || window.innerHeight;
+  viewScale = Math.max(0.1, Math.min(w / DESIGN_W, h / DESIGN_H));
+  wrap.style.transform = `translate(-50%, -50%) scale(${viewScale})`;
 }
-window.addEventListener('resize', fit, { passive: true });
-window.addEventListener('orientationchange', () => setTimeout(fit, 120), { passive: true });
-if (window.visualViewport) window.visualViewport.addEventListener('resize', fit, { passive: true });
+let fitRaf = 0;
+const scheduleFit = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fit); };
+window.addEventListener('resize', scheduleFit, { passive: true });
+window.addEventListener('orientationchange', () => { scheduleFit(); setTimeout(fit, 150); setTimeout(fit, 400); }, { passive: true });
+document.addEventListener('fullscreenchange', scheduleFit);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', scheduleFit, { passive: true });
+window.addEventListener('load', fit);
 fit();
 bindTouch();
