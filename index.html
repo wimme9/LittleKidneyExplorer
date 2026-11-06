@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <div id="stage">
@@ -22,12 +22,10 @@
 
       <!-- แถบเก็บวัตถุดิบด้านล่าง -->
       <aside id="hud-bottom">
-        <div class="hud-left-group">
-          <div class="hud-label">กระเป๋า <b id="bag-count">0/8</b></div>
-          <p class="hud-keys">A/D/W/S หรือ ลูกศร เดิน | E เก็บ/จัดอาหาร | F ดูข้อมูล | Esc ปิดหน้าต่าง</p>
-        </div>
         <div id="bag-slots"></div>
+        <span id="bag-count" class="hidden">0/8</span>
       </aside>
+      <p class="hud-keys">A/D/W/S หรือ ลูกศร เดิน | E เก็บ/จัดอาหาร | F ดูข้อมูล | Esc ปิดหน้าต่าง</p>
 
       <!-- ปุ่มควบคุมบนมือถือ -->
       <div id="touch">
@@ -108,6 +106,6 @@
   <div id="rotate">📱 กรุณาหมุนจอเป็นแนวนอนเพื่อเล่น</div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-  <script src="game.js?v=3"></script>
+  <script src="game.js?v=4"></script>
 </body>
 </html>

@@ -20,22 +20,23 @@ body{overscroll-behavior:none}
 #mission-title{font-family:'Mali',sans-serif;font-weight:700;white-space:nowrap;font-size:22px}
 #mission-text{flex:1;font-size:20px}
 
-/* แถบเก็บวัตถุดิบด้านล่าง */
-#hud-bottom{position:absolute;left:10px;right:10px;top:456px;height:76px;padding:6px 12px;background:var(--paper);border:3px solid var(--ink);border-radius:12px;display:flex;align-items:center;gap:12px}
-.hud-left-group{display:flex;flex-direction:column;justify-content:center;min-width:170px}
-.hud-label{font-family:'Mali',sans-serif;font-size:20px;text-align:left}
-#bag-slots{display:flex;gap:6px;flex:1;justify-content:flex-end;overflow-x:auto}
-.bag-slot{width:52px;height:52px;border:2px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:32px;background:#fff;padding:0;cursor:pointer;flex-shrink:0}
-.bag-slot.filled{border:2px solid var(--ink);background:var(--butter)}
-.bag-slot.plated{opacity:.45}
 .bag-slot:focus-visible,.btn:focus-visible{outline:3px solid var(--mint-d);outline-offset:2px}
-.hud-keys{margin:0;font-size:15px;line-height:1.3;color:#4b5b78}
+/* ===== Hotbar เก็บวัตถุดิบ (แบบ Minecraft): อยู่กลางล่าง ช่องเล็ก ใช้เหมือนกันทุกอุปกรณ์ ===== */
+#hud-bottom{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:auto;height:auto;padding:4px;background:rgba(22,33,58,.92);border:3px solid #c9d3e3;border-radius:8px;z-index:5;display:flex}
+#bag-slots{display:flex;gap:4px;counter-reset:slot}
+.bag-slot{position:relative;width:44px;height:44px;border:2px solid #7d8aa3;border-radius:6px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;padding:0;cursor:pointer;flex-shrink:0;counter-increment:slot}
+.bag-slot::before{content:counter(slot);position:absolute;top:1px;left:4px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;line-height:1;color:#c9d3e3;pointer-events:none}
+.bag-slot.filled{border-color:var(--ink);background:var(--butter)}
+.bag-slot.filled::before{color:var(--ink)}
+.bag-slot.plated{opacity:.45}
+.bag-slot:disabled{cursor:default}
+.hud-keys{position:absolute;left:12px;bottom:10px;width:260px;margin:0;font-size:14px;line-height:1.35;color:#c9d3e3}
+#game-wrap.touch .hud-keys{display:none}
 #toast{position:absolute;top:70px;left:480px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 18px;border-radius:999px;font-size:21px;z-index:40;white-space:nowrap;max-width:75%;text-align:center}
 
 /* Mobile touch controls */
 #touch{display:none}
 #game-wrap.touch #touch{display:block}
-#game-wrap.touch .hud-keys{display:none}
 #game-wrap.locked #touch{display:none!important}
 #joy,.tbtn{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 #joy{position:absolute;left:30px;top:50%;margin-top:-92px;width:184px;height:184px;border-radius:50%;background:rgba(255,253,246,.50);border:5px solid rgba(31,45,74,.85);display:flex;align-items:flex-start;justify-content:center;z-index:6}
@@ -47,17 +48,7 @@ body{overscroll-behavior:none}
 #btn-e{right:30px;top:50%;margin-top:-68px;width:136px;height:136px}
 #btn-f{right:182px;top:50%;margin-top:-48px;width:96px;height:96px;font-size:36px}
 
-/* ===== โหมดมือถือ: ช่องเก็บของย่อเล็ก อยู่กลางล่างจอ โชว์ 3 ช่อง ปัดซ้าย-ขวาเลื่อนดูที่เหลือ ===== */
 #game-wrap.touch{background:#16213a}
-#game-wrap.touch #hud-bottom{left:50%;right:auto;top:auto;bottom:8px;transform:translateX(-50%);width:auto;height:auto;padding:4px 5px 3px;gap:0;background:rgba(22,33,58,.92);border:3px solid #c9d3e3;border-radius:10px;z-index:5}
-#game-wrap.touch .hud-left-group{display:none}
-#game-wrap.touch #bag-slots{flex:none;width:136px;gap:4px;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;touch-action:pan-x;-webkit-overflow-scrolling:touch;padding-bottom:5px;scrollbar-width:thin;scrollbar-color:#c9d3e3 rgba(255,255,255,.15)}
-#game-wrap.touch #bag-slots::-webkit-scrollbar{height:6px}
-#game-wrap.touch #bag-slots::-webkit-scrollbar-track{background:rgba(255,255,255,.15);border-radius:3px}
-#game-wrap.touch #bag-slots::-webkit-scrollbar-thumb{background:#c9d3e3;border-radius:3px}
-#game-wrap.touch .bag-slot{width:40px;height:40px;scroll-snap-align:start;border:2px solid #7d8aa3;border-radius:6px;background:rgba(255,255,255,.10);font-size:24px!important}
-#game-wrap.touch .bag-slot.filled{border-color:var(--ink);background:var(--butter)}
-#game-wrap.touch .bag-slot.plated{opacity:.5}
 
 #rotate{display:none;position:fixed;inset:0;z-index:99;background:var(--ink);color:#fff;align-items:center;justify-content:center;text-align:center;font-size:25px;padding:24px}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}

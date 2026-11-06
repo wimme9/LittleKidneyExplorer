@@ -182,10 +182,6 @@ const UI = {
       const b = document.createElement('button');
       const id = state.collected[i];
       b.className = 'bag-slot';
-      b.style.display = 'flex';
-      b.style.alignItems = 'center';
-      b.style.justifyContent = 'center';
-      b.style.fontSize = '24px';
       
       if (id) {
         const f = FOOD_DB[id];
