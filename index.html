@@ -7,12 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div id="stage">
+    <div id="safe"></div>
     <div id="game-wrap">
       <div id="game"></div>
+
+      <div id="ui">
 
       <!-- แถบภารกิจด้านบน -->
       <div id="hud-top">
@@ -100,12 +103,13 @@
           <div class="actions"><button id="sm-restart" class="btn primary">เล่นใหม่</button></div>
         </div>
       </div>
+      </div><!-- /ui -->
     </div>
   </div>
 
   <div id="rotate">📱 กรุณาหมุนจอเป็นแนวนอนเพื่อเล่น</div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=5"></script>
 </body>
 </html>
