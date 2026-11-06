@@ -176,7 +176,8 @@ const UI = {
     $('mission-text').textContent =
       `${lv.mission} (เก็บแล้ว ${state.collected.length}/${lv.ingredients.length} · ในจาน ${state.plated.length}/${lv.pickCount})`;
     $('bag-count').textContent = `${state.collected.length}/${lv.ingredients.length}`;
-    $('bag-slots').innerHTML = '';
+    const bagEl = $('bag-slots'), keepScroll = bagEl.scrollLeft;   // จำตำแหน่งเลื่อนไว้ ไม่ให้เด้งกลับต้นแถว
+    bagEl.innerHTML = '';
     for (let i = 0; i < lv.ingredients.length; i++) {
       const b = document.createElement('button');
       const id = state.collected[i];
@@ -192,8 +193,14 @@ const UI = {
         b.textContent = f.emoji; b.title = `${f.name} – คลิกเพื่อรวมเข้าจานหรือดูข้อมูล`;
         b.onclick = () => UI.openPlate();
       } else { b.disabled = true; b.tabIndex = -1; }
-      $('bag-slots').appendChild(b);
+      bagEl.appendChild(b);
     }
+    bagEl.scrollLeft = keepScroll;
+  },
+
+  scrollBagTo(i) {
+    const el = $('bag-slots'), s = el.children[i];
+    if (s) el.scrollLeft = Math.max(0, s.offsetLeft - el.offsetLeft - (el.clientWidth - s.offsetWidth));
   },
 
   openInfo(id) {
@@ -521,7 +528,7 @@ class KitchenScene extends Phaser.Scene {
     this.tweens.add({ targets: it.visual, y: it.baseY - 40, alpha: 0, scale: 1.4, duration: 260,
       onComplete: () => it.visual.setVisible(false) });
     it.shadow.setVisible(false); it.label.setVisible(false);
-    UI.renderHud(); UI.toast(`เก็บ${FOOD_DB[it.id].name}แล้ว`);
+    UI.renderHud(); UI.scrollBagTo(state.collected.length - 1); UI.toast(`เก็บ${FOOD_DB[it.id].name}แล้ว`);
   }
 
   update(time, dt) {
