@@ -647,11 +647,11 @@ class KitchenScene extends Phaser.Scene {
     g.fillStyle(0x000000, 0.1).fillRect(-M, 224, W2, 10);                           // เงาใต้เคาน์เตอร์
     g.lineStyle(3, 0x1f2d4a); ln(-M, 96, W + M, 96); ln(-M, 224, W + M, 224);
     // ต้นไม้กระถางริมห้อง
-    [[16, 320], [944, 320]].forEach(([x, y]) => {
-      g.fillStyle(0xc2603a).fillCircle(x, y, 16).lineStyle(3, 0x1f2d4a).strokeCircle(x, y, 16);
-      g.fillStyle(0x4caf50); for (let a = 0; a < 6; a++) g.fillCircle(x + Math.cos(a * 1.05) * 9, y + Math.sin(a * 1.05) * 9, 8);
-      g.fillStyle(0x7ed37f).fillCircle(x, y, 7);
-    });
+    //[[16, 320], [944, 320]].forEach(([x, y]) => {
+      //g.fillStyle(0xc2603a).fillCircle(x, y, 16).lineStyle(3, 0x1f2d4a).strokeCircle(x, y, 16);
+      //g.fillStyle(0x4caf50); for (let a = 0; a < 6; a++) g.fillCircle(x + Math.cos(a * 1.05) * 9, y + Math.sin(a * 1.05) * 9, 8);
+      //g.fillStyle(0x7ed37f).fillCircle(x, y, 7);
+    //});
     // แสงแดดจากหน้าต่าง
     g.fillStyle(0xffffff, 0.22).fillPoints([{ x: 120, y: 236 }, { x: 200, y: 236 }, { x: 290, y: 430 }, { x: 210, y: 430 }], true);
     g.fillStyle(0xffffff, 0.16).fillPoints([{ x: 230, y: 236 }, { x: 280, y: 236 }, { x: 370, y: 430 }, { x: 320, y: 430 }], true);
