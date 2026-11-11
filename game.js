@@ -647,11 +647,11 @@ class KitchenScene extends Phaser.Scene {
     g.fillStyle(0x000000, 0.1).fillRect(-M, 224, W2, 10);                           // เงาใต้เคาน์เตอร์
     g.lineStyle(3, 0x1f2d4a); ln(-M, 96, W + M, 96); ln(-M, 224, W + M, 224);
     // ต้นไม้กระถางริมห้อง
-    //[[16, 320], [944, 320]].forEach(([x, y]) => {
-      //g.fillStyle(0xc2603a).fillCircle(x, y, 16).lineStyle(3, 0x1f2d4a).strokeCircle(x, y, 16);
-      //g.fillStyle(0x4caf50); for (let a = 0; a < 6; a++) g.fillCircle(x + Math.cos(a * 1.05) * 9, y + Math.sin(a * 1.05) * 9, 8);
-      //g.fillStyle(0x7ed37f).fillCircle(x, y, 7);
-    //});
+    [[16, 320], [944, 320]].forEach(([x, y]) => {
+      g.fillStyle(0xc2603a).fillCircle(x, y, 16).lineStyle(3, 0x1f2d4a).strokeCircle(x, y, 16);
+      g.fillStyle(0x4caf50); for (let a = 0; a < 6; a++) g.fillCircle(x + Math.cos(a * 1.05) * 9, y + Math.sin(a * 1.05) * 9, 8);
+      g.fillStyle(0x7ed37f).fillCircle(x, y, 7);
+    });
     // แสงแดดจากหน้าต่าง
     g.fillStyle(0xffffff, 0.22).fillPoints([{ x: 120, y: 236 }, { x: 200, y: 236 }, { x: 290, y: 430 }, { x: 210, y: 430 }], true);
     g.fillStyle(0xffffff, 0.16).fillPoints([{ x: 230, y: 236 }, { x: 280, y: 236 }, { x: 370, y: 430 }, { x: 320, y: 430 }], true);
@@ -708,9 +708,9 @@ class KitchenScene extends Phaser.Scene {
     g.fillStyle(0xf2c29b).fillCircle(2, -20, 6).fillCircle(2, 20, 6);               // มือ
     g.fillStyle(0xffd86b).fillEllipse(0, 0, 22, 42).lineStyle(2, 0x1f2d4a).strokeEllipse(0, 0, 22, 42); // ตัว/เสื้อ
     g.fillStyle(0xf2c29b).fillCircle(3, 0, 13);                                      // หัว
-    g.fillStyle(0x000000).fillEllipse(-5, 0, 20, 28);                                // ผม (สีดำ)
-    //g.fillStyle(0xffffff).fillCircle(-2, 0, 12).lineStyle(2, 0x1f2d4a).strokeCircle(-2, 0, 12); // หมวกเชฟ
-    //g.fillStyle(0xeef2f6).fillCircle(-2, -5, 4).fillCircle(-2, 5, 4).fillCircle(-6, 0, 4);
+    g.fillStyle(0x3b2a20).fillEllipse(-3, 0, 17, 25);                                // ผม
+    g.fillStyle(0xffffff).fillCircle(-2, 0, 12).lineStyle(2, 0x1f2d4a).strokeCircle(-2, 0, 12); // หมวกเชฟ
+    g.fillStyle(0xeef2f6).fillCircle(-2, -5, 4).fillCircle(-2, 5, 4).fillCircle(-6, 0, 4);
     g.fillStyle(0xd9a37a).fillCircle(15, 0, 3);                                      // จมูก (บอกทิศหน้า)
     c.add([this.footL, this.footR, g]);
     this.player = c; this.walkT = 0; this.dirAngle = Math.PI / 2;
