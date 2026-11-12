@@ -632,10 +632,10 @@ class KitchenScene extends Phaser.Scene {
       if (((ix + iy) % 2 + 2) % 2) g.fillRect(ix * 60, 188 + iy * 60, 60, 60);
     }
     // พรมกลางห้อง
-    g.fillStyle(0xe76f51).fillRoundedRect(290, 292, 380, 118, 22);
-    g.fillStyle(0xf6d6a8).fillRoundedRect(302, 304, 356, 94, 14);
-    g.fillStyle(0xf4a261).fillRoundedRect(314, 316, 332, 70, 10);
-    g.fillStyle(0xe76f51); for (let x = 330; x < 640; x += 36) g.fillCircle(x, 351, 7);
+    //g.fillStyle(0xe76f51).fillRoundedRect(290, 292, 380, 118, 22);
+    //g.fillStyle(0xf6d6a8).fillRoundedRect(302, 304, 356, 94, 14);
+    //g.fillStyle(0xf4a261).fillRoundedRect(314, 316, 332, 70, 10);
+    //g.fillStyle(0xe76f51); for (let x = 330; x < 640; x += 36) g.fillCircle(x, 351, 7);
     // เคาน์เตอร์: พื้นไม้ + ขอบ + ตู้ด้านหน้า
     g.fillStyle(0xe0a35f).fillRect(-M, 96, W2, 80);
     g.fillStyle(0xf0bd7e).fillRect(-M, 96, W2, 6);
